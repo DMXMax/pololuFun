@@ -5,8 +5,15 @@ import (
 	"fmt"
 )
 
-const CLEAR_MSB = 0x7F
-
+const (
+  CLEAR_MSB = 0x7F
+  LSB_MASK = 0xFF
+  POLOLU_CMD_PREFIX = 0xAA
+  CMD_SET_TARGET = 0x84
+  CMD_SET_SPEED = 0x87
+  CMD_SET_ACCEL = 0x89
+  CMD_GET_POS = 0x90
+)
 type Device struct{
 	Id byte
 	Channels int8
@@ -18,32 +25,32 @@ type CommandPacket struct{
 }
 
 func SetTarget(channel, position int16)(ret *CommandPacket){
-	ret = &CommandPacket{Command:0x84}
+	ret = &CommandPacket{Command:CMD_SET_TARGET}
 	ret.Data = append(ret.Data, byte(channel), byte(position & 0xFF), byte(position >> 7))
 	return
 } 
 
 func SetSpeed(channel, speed int16)(ret *CommandPacket){
-	ret = &CommandPacket{Command:0x87}
+	ret = &CommandPacket{Command:CMD_SET_SPEED}
 	ret.Data = append(ret.Data, byte(channel), byte(speed & 0xFF), byte(speed >> 7))
 	return
 }
 
 func SetAccelleration(channel, accel int16)(ret *CommandPacket){
-	ret = &CommandPacket{Command:0x89}
+	ret = &CommandPacket{Command:CMD_SET_ACCEL}
 	ret.Data = append(ret.Data, byte(channel), byte(accel & 0xFF), byte(accel >> 7))
 	return
 }
 
 func GetPosition(channel int8)(ret *CommandPacket){
-	ret = &CommandPacket{Command:0x90}
+	ret = &CommandPacket{Command:CMD_GET_POS}
 	ret.Data = append(ret.Data, byte(channel))
 	return
 }
 	
 
 func (d *Device) DoCommand(cmd *CommandPacket) (data []byte){
-	data = append(data, 0xAA, d.Id, cmd.Command & CLEAR_MSB)
+	data = append(data, POLOLU_CMD_PREFIX, d.Id, cmd.Command & CLEAR_MSB)
 	data = append( data, cmd.Data...)
 	return //naked return
 }
